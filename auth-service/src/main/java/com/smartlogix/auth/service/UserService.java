@@ -1,9 +1,12 @@
 package com.smartlogix.auth.service;
 
+import com.smartlogix.auth.model.Profile;
+import com.smartlogix.auth.model.ProfileFactory;
 import com.smartlogix.auth.model.User;
 import com.smartlogix.auth.repository.UserRepository;
-import com.smartlogix.auth.security.JwtService; // Importante añadir este
+import com.smartlogix.auth.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,37 +14,39 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor 
+@RequiredArgsConstructor
 public class UserService implements IUserService {
 
     private final UserRepository userRepository;
-    private final JwtService jwtService; // Se añade la inyección del servicio JWT
+    private final JwtService jwtService;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public String login(String username, String password) {
-        // 1. Buscamos al usuario
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // 2. Validamos la contraseña (Por ahora texto plano, luego usaremos BCrypt)
-        if (!user.getPassword().equals(password)) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("Credenciales inválidas");
         }
 
-        // 3. Actualizamos la última fecha de acceso (CamelCase)
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
 
-        // 4. Generamos y retornamos el token
         return jwtService.generateToken(user);
     }
 
     @Override
     @Transactional
     public User createUser(User user) {
-        if(userRepository.existsByEmail(user.getEmail())) {
+        if (userRepository.existsByEmail(user.getEmail())) {
             throw new RuntimeException("El email ya está registrado");
         }
+
+        Profile profile = ProfileFactory.createProfile(user.getUserRole());
+        profile.setUser(user);
+        user.setProfile(profile);
+
         return userRepository.save(user);
     }
 
@@ -55,19 +60,4 @@ public class UserService implements IUserService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
-
-    @Override
-@Transactional
-public User createUser(User user) {
-    if(userRepository.existsByEmail(user.getEmail())) {
-        throw new RuntimeException("El email ya está registrado");
-    }
-
-    // Usamos la Factory para crear el perfil correcto según el rol del usuario
-    Profile profile = ProfileFactory.createProfile(user.getUserRole());
-    profile.setUser(user); // Vinculamos ambos
-    user.setProfile(profile);
-
-    return userRepository.save(user);
-}
 }

@@ -1,9 +1,11 @@
 package com.smartlogix.auth.service;
 
-import com.smartlogix.auth.dto.*;
+import com.smartlogix.auth.dto.AuthRequest;
+import com.smartlogix.auth.dto.AuthResponse;
+import com.smartlogix.auth.model.Role;
 import com.smartlogix.auth.model.User;
 import com.smartlogix.auth.repository.UserRepository;
-import com.smartlogix.auth.util.JwtUtil;
+import com.smartlogix.auth.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,7 +16,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
 
     public AuthResponse register(AuthRequest request) {
 
@@ -25,12 +27,13 @@ public class AuthService {
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role("USER")
+                .email(request.getEmail())
+                .userRole(Role.USER)
                 .build();
 
         userRepository.save(user);
 
-        String token = jwtUtil.generateToken(user.getUsername());
+        String token = jwtService.generateToken(user);
         return new AuthResponse(token);
     }
 
@@ -43,7 +46,7 @@ public class AuthService {
             throw new RuntimeException("Contraseña incorrecta");
         }
 
-        String token = jwtUtil.generateToken(user.getUsername());
+        String token = jwtService.generateToken(user);
         return new AuthResponse(token);
     }
 }

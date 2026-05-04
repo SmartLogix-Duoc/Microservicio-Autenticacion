@@ -21,22 +21,8 @@ public abstract class Profile {
     private String phoneNumber;
 
     @OneToOne
-    @JoinColumn(name = "user_id") // Esta es la columna física (FK) que unirá ambas tablas
+    @JoinColumn(name = "user_id")
     private User user;
 
     public abstract String getPermissions();
-}
-
-@Entity
-@DiscriminatorValue("ADMIN")
-public class AdminProfile extends Profile {
-    @Override
-    public String getPermissions() { return "FULL_ACCESS"; }
-}
-
-@Entity
-@DiscriminatorValue("CLIENT")
-public class ClientProfile extends Profile {
-    @Override
-    public String getPermissions() { return "READ_ONLY"; }
 }
