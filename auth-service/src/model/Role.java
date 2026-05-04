@@ -1,6 +1,0 @@
-package com.smartlogix.auth.model;
-
-public enum Role {
-    ADMIN,
-    EMPLOYEE
-}

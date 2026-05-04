@@ -5,11 +5,12 @@ import lombok.*;
 
 @Entity
 @Table(name = "profiles")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "profile_type")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Profile {
+public abstract class Profile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,4 +23,20 @@ public class Profile {
     @OneToOne
     @JoinColumn(name = "user_id") // Esta es la columna física (FK) que unirá ambas tablas
     private User user;
+
+    public abstract String getPermissions();
+}
+
+@Entity
+@DiscriminatorValue("ADMIN")
+public class AdminProfile extends Profile {
+    @Override
+    public String getPermissions() { return "FULL_ACCESS"; }
+}
+
+@Entity
+@DiscriminatorValue("CLIENT")
+public class ClientProfile extends Profile {
+    @Override
+    public String getPermissions() { return "READ_ONLY"; }
 }

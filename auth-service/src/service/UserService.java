@@ -55,4 +55,19 @@ public class UserService implements IUserService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
+
+    @Override
+@Transactional
+public User createUser(User user) {
+    if(userRepository.existsByEmail(user.getEmail())) {
+        throw new RuntimeException("El email ya está registrado");
+    }
+
+    // Usamos la Factory para crear el perfil correcto según el rol del usuario
+    Profile profile = ProfileFactory.createProfile(user.getUserRole());
+    profile.setUser(user); // Vinculamos ambos
+    user.setProfile(profile);
+
+    return userRepository.save(user);
+}
 }
