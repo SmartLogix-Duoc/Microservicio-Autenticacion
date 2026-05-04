@@ -7,4 +7,5 @@ public interface IUserService {
     User createUser(User user);
     List<User> getAllUsers();
     User getUserById(Long id);
+    String login(String username, String password);
 }
