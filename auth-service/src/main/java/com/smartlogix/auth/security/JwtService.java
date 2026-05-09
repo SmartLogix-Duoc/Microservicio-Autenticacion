@@ -23,14 +23,19 @@ public class JwtService {
 
     public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", user.getUserRole().name());
+        
+        // --- CAMBIO CLAVE AQUÍ ---
+        // Para que Supabase (PostgREST) te deje pasar, el claim debe ser "authenticated"
+        // Si quieres guardar tu rol interno (USER/ADMIN), guárdalo en otra clave como "user_role"
+        claims.put("role", "authenticated"); 
+        claims.put("internal_role", user.getUserRole().name()); 
         claims.put("userId", user.getUserId());
 
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(user.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24 horas
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
