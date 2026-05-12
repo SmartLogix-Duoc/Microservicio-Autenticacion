@@ -18,6 +18,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
+    // ── Registro de usuario interno (USER) ────────────────────────────────────
     public AuthResponse register(AuthRequest request) {
 
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
@@ -37,6 +38,29 @@ public class AuthService {
         return new AuthResponse(token);
     }
 
+    // ── Registro de cliente (CLIENT) ──────────────────────────────────────────
+    // Mismo flujo que register() pero asigna rol CLIENT.
+    // El método existe pero no está expuesto en ningún endpoint aún.
+    public AuthResponse registerClient(AuthRequest request) {
+
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new RuntimeException("Usuario ya existe");
+        }
+
+        User user = User.builder()
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .email(request.getEmail())
+                .userRole(Role.CLIENT)
+                .build();
+
+        userRepository.save(user);
+
+        String token = jwtService.generateToken(user);
+        return new AuthResponse(token);
+    }
+
+    // ── Login (compartido por todos los roles) ────────────────────────────────
     public AuthResponse login(AuthRequest request) {
 
         User user = userRepository.findByUsername(request.getUsername())

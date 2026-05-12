@@ -7,8 +7,9 @@ public class ProfileFactory {
 
     public static Profile createProfile(Role role) {
         return switch (role) {
-            case ADMIN -> new AdminProfile();
-            case USER -> new ClientProfile();
+            case ADMIN  -> new AdminProfile();
+            case USER   -> new ClientProfile();
+            case CLIENT -> new ClientProfile();
             default -> throw new IllegalArgumentException("Rol no soportado: " + role);
         };
     }
