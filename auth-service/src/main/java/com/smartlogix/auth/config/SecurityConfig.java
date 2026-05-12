@@ -32,7 +32,8 @@ public class SecurityConfig {
                     "/swagger-ui/**",
                     "/swagger-ui.html",
                     "/h2-console/**",
-                    "/actuator/health"
+                    "/actuator/health",
+                    "/api/auth/**"
                 ).permitAll() // Permitir rutas de auth, Swagger y H2
                 .anyRequest().authenticated()
             )
