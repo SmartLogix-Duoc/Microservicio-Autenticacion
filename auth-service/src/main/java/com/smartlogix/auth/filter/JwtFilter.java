@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections; // Usaremos esto en lugar de List.of para evitar errores de tipo
+import java.util.Collections;
 
 @Component
 @RequiredArgsConstructor
@@ -23,6 +23,17 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserRepository userRepository;
+
+    // Rutas públicas — el filtro las deja pasar sin validar token
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.startsWith("/auth") ||
+               path.startsWith("/api/v1/auth") ||
+               path.startsWith("/actuator") ||
+               path.startsWith("/v3/api-docs") ||
+               path.startsWith("/swagger-ui");
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -37,22 +48,17 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
-            // Si aquí sigue el error, revisa que en JwtService el método se llame extractUsername
-            username = jwtService.extractUsername(token); 
+            username = jwtService.extractUsername(token);
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
             userRepository.findByUsername(username).ifPresent(user -> {
-                // Usamos Collections.singletonList para que sea más compatible con versiones viejas de Java
-                // REVISA: Si en User.java tu campo es 'role', cambia getUserRole() por getRole()
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(
                                 user.getUsername(),
                                 null,
                                 Collections.singletonList(new SimpleGrantedAuthority(user.getUserRole().name()))
                         );
-
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             });
