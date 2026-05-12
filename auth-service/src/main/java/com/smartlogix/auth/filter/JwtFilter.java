@@ -41,6 +41,8 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        System.out.println(">>> RUTA RECIBIDA POR SPRING BOOT: " + request.getRequestURI());
+        
         final String authHeader = request.getHeader("Authorization");
 
         String username = null;
